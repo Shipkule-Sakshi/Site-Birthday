@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Create Birthday Greeting for Your Special Person 🥰</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8d7e7;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+      overflow-x: hidden;
+    }
+
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 600px;
+      margin: 20px auto;
+      box-shadow: 0 0 20px rgba(255, 105, 180, 0.3);
+      position: relative;
+      z-index: 1;
+    }
+
+    input, textarea {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #220202;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    button {
+      background: #e3eda4;
+      color: #0e0d0d;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    .preview {
+      margin-top: 30px;
+      background: rgb(202, 228, 239);
+      padding: 20px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+      box-shadow: 0 0 25px rgba(132, 217, 255, 0.6);
+    }
+
+    .media-glow {
+      position: relative;
+      margin-top: 20px;
+      box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+      border-radius: 10px;
+    }
+
+    .media-glow::after {
+      content: '';
+      position: absolute;
+      bottom: -50%;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: inherit;
+      transform: scaleY(-1);
+      opacity: 0.4;
+      filter: blur(2px);
+      background-image: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent);
+      z-index: -1;
+    }
+
+    video, img {
+      width: 100%;
+      display: block;
+      border-radius: 10px;
+    }
+
+    audio {
+      margin-top: 15px;
+      display: block;
+      width: 100%;
+    }
+
+    /* Heart rain animation */
+    .heart {
+      position: fixed;
+      top: -20px;
+      color: red;
+      font-size: 24px;
+      animation: fall linear;
+      z-index: 999;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🎂💕 Create a Birthday Page 🎉💕</h2>
+    <input type="text" id="name" placeholder="Enter Birthday Person's Name" />
+    <textarea id="message" placeholder="Write your birthday message..."></textarea>
+
+    <label>Upload Images:</label>
+    <input type="file" id="imageUpload" accept="image/*" multiple />
+
+    <label>Upload Videos:</label>
+    <input type="file" id="videoUpload" accept="video/*" multiple />
+
+    <label>Upload Audios:</label>
+    <input type="file" id="audioUpload" accept="audio/*" multiple />
+
+    <button onclick="generateGreeting()">🎁💝 Generate Page 💝💝</button>
+  </div>
+
+  <div class="preview" id="output"></div>
+
+  <script>
+    let heartRainStarted = false;
+    const audioElements = [];
+    const videoElements = [];
+
+    function generateGreeting() {
+      const name = document.getElementById('name').value.trim();
+      const msg = document.getElementById('message').value.trim();
+      const images = document.getElementById('imageUpload').files;
+      const videos = document.getElementById('videoUpload').files;
+      const audios = document.getElementById('audioUpload').files;
+
+      if (!name || !msg) {
+        alert("Please fill in the name and message.");
+        return;
+      }
+
+      const output = document.getElementById('output');
+      output.innerHTML = `<h2>🎉 Happy Birthday, ${name}! 🎂🎉💝💕</h2><p>${msg}</p>`;
+
+      audioElements.length = 0;
+      videoElements.length = 0;
+
+      if (images.length > 0) {
+        Array.from(images).forEach(file => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'media-glow';
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            wrapper.appendChild(img);
+            output.appendChild(wrapper);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      if (videos.length > 0) {
+        Array.from(videos).forEach(file => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'media-glow';
+            const video = document.createElement('video');
+            video.controls = true;
+            video.src = e.target.result;
+            wrapper.appendChild(video);
+            output.appendChild(wrapper);
+            videoElements.push(video);
+
+            video.addEventListener('play', pauseAllAudios);
+            video.addEventListener('pause', checkAndResumeAudios);
+            video.addEventListener('ended', checkAndResumeAudios);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      if (audios.length > 0) {
+        Array.from(audios).forEach(file => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const audio = document.createElement('audio');
+            audio.controls = true;
+            audio.autoplay = true;
+            audio.src = e.target.result;
+            output.appendChild(audio);
+            audioElements.push(audio);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      if (!heartRainStarted) {
+        heartRainStarted = true;
+        startHeartRainForever();
+      }
+
+      output.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function pauseAllAudios() {
+      audioElements.forEach(audio => {
+        if (!audio.paused) audio.pause();
+      });
+    }
+
+    function checkAndResumeAudios() {
+      const anyPlaying = videoElements.some(video => !video.paused && !video.ended);
+      if (!anyPlaying) {
+        audioElements.forEach(audio => {
+          if (audio.paused) audio.play();
+        });
+      }
+    }
+
+    function startHeartRainForever() {
+      setInterval(() => {
+        const heart = document.createElement('div');
+        heart.className = 'heart';
+        heart.style.left = Math.random() * 100 + 'vw';
+        heart.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        heart.innerText = '❤️';
+        document.body.appendChild(heart);
+        setTimeout(() => heart.remove(), 6000);
+      }, 300);
+    }
+  </script>
+</body>
+</html>
